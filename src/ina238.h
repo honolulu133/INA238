@@ -132,16 +132,72 @@ public:
     };
 
     // ADC Config register structure
+    struct ADCConfigRegister {
+        MeasurementMode mode : 4; // Measurement mode
+        ConversionTime convTimeBusVoltage : 3; // Conversion time for bus voltage
+        ConversionTime convTimeShuntVoltage : 3; // Conversion time for shunt voltage
+        ConversionTime convTimeTemperature : 3;
+        Averaging averaging : 3; // Averaging mode
+    };
 
+    // Diagnostic Alert register structure
+    struct DiagnosticAlertRegister {
+        uint16_t aLatch : 1;      // Bit 15: (Setting) Alert Latch Enable
+        uint16_t cnvr : 1;        // Bit 14: (Setting) Conversion Ready on ALERT pin
+        uint16_t slowAlert : 1;   // Bit 13: (Setting) ALERT comparison on averaged value
+        uint16_t aPol : 1;        // Bit 12: (Setting) Alert Polarity (open-drain), 0 = Normal (active Low), 1 = Inverted (active High)
+        uint16_t reserved1 : 2;   // Bits 11-10: Reserved, always read 0
+        uint16_t mathOf : 1;      // Bit 9: Math Overflow Error
+        uint16_t reserved2 : 1;   // Bit 8: Reserved, always read 0
+        uint16_t tmPol : 1;       // Bit 7: Temperature Over-Limit Event
+        uint16_t shntOl : 1;      // Bit 6: Shunt Over-Limit Event
+        uint16_t shntUl : 1;      // Bit 5: Shunt Under-Limit Event
+        uint16_t busOl : 1;       // Bit 4: Bus Over-Limit Event
+        uint16_t busUl : 1;       // Bit 3: Bus Under-Limit Event
+        uint16_t pol : 1;         // Bit 2: Power Over-Limit Event
+        uint16_t cnvrf : 1;       // Bit 1: Conversion is Complete Flag
+        uint16_t memStat : 1;     // Bit 0: Memory Checksum Error Status
+    };
 
 public:
     INA238(uint8_t address = 0x40);
+
     bool begin(TwoWire &wirePort = Wire);
-    float readBusVoltage();
-    float readShuntVoltage();
-    float readCurrent();
-    float readPower();
-    void reset();
+    bool reset();
+
+    bool setConfigRegister(ConfigRegister config);
+    bool setADCConfigRegister(ADCConfigRegister adcConfig);
+    bool setShuntCalibration(uint16_t calibrationValue);
+    bool setDiagnosticAlertRegister(DiagnosticAlertRegister diagAlert);
+    bool setShuntOvervoltageThreshold(float threshold);
+    bool setShuntUndervoltageThreshold(float threshold);
+    bool setBusOvervoltageThreshold(float threshold);
+    bool setBusUndervoltageThreshold(float threshold);
+    bool setTemperatureOverlimitThreshold(float temperature);
+    bool setPowerOverLimitThreshold(float power);
+
+    bool setShuntValues(float shuntResistance, float maxExpectedCurrent);
+
+    bool readConfigRegister(ConfigRegister &config);
+    bool readADCConfigRegister(ADCConfigRegister &adcConfig);
+    bool readShuntCalibration(uint16_t &calibrationValue);
+    bool readDiagnosticAlertRegister(DiagnosticAlertRegister &diagAlert);
+    bool readShuntOvervoltageThreshold(float &threshold);
+    bool readShuntUndervoltageThreshold(float &threshold);
+    bool readBusOvervoltageThreshold(float &threshold);
+    bool readBusUndervoltageThreshold(float &threshold);
+    bool readTemperatureOverlimitThreshold(float &temperature);
+    bool readPowerOverLimitThreshold(float &power);
+
+    bool readBusVoltage(float &voltage);
+    bool readShuntVoltage(float &voltage);
+    bool readCurrent(float &current);
+    bool readPower(float &power);
+    bool readTemperature(float &temperature);
+
+    bool readDiagnosticAlert(uint16_t &alert);
+
+    
 
 
 };
