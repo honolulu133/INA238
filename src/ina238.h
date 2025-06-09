@@ -21,7 +21,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
+/**
+ * @file ina238.h
+ * @brief Header file for INA238 current and power monitor class.
+ *
+ * This file defines the INA238 class, which provides methods to interact with the INA238
+ * current and power monitor IC over I2C. It includes enumerations for configuration options,
+ * register definitions, and methods for reading and writing to the device.
+ */
 #ifndef INA238_H
 #define INA238_H
 
@@ -159,46 +166,243 @@ public:
         uint16_t memStat : 1;     // Bit 0: Memory Checksum Error Status
     };
 
+// Public methods for INA238 class
 public:
+    /**
+     * @brief Constructor for INA238 class.
+     * Initializes the INA238 with a default I2C address.
+     * @param address I2C address of the INA238 (default is 0x40).
+     */
     INA238(uint8_t address = 0x40);
 
+    /**
+     * @brief Destructor for INA238 class.
+     * Cleans up resources used by the INA238 instance.
+     */
+    ~INA238();
+
+    /**
+     * @brief Initializes the INA238 with the specified I2C wire port.
+     * This method sets up the I2C communication and prepares the INA238 for operation.
+     * Wire.begin() must be called before this method.
+     * @param wirePort Reference to the TwoWire object (default is Wire).
+     * @return true if initialization is successful, false otherwise.
+     */
     bool begin(TwoWire &wirePort = Wire);
+    /**
+     * @brief Resets the INA238 device.
+     * This method resets the INA238 to its default state.
+     * @return true if the reset is successful, false otherwise.
+     */
     bool reset();
 
+    /**
+     * @brief Sets the configuration register of the INA238.
+     * This method configures the INA238 with the specified settings.
+     * @param config Configuration settings for the INA238.
+     * @return true if the configuration is set successfully, false otherwise.
+     */
     bool setConfigRegister(ConfigRegister config);
+    /**
+     * @brief Sets the ADC configuration register of the INA238.
+     * This method configures the ADC settings of the INA238.
+     * @param adcConfig ADC configuration settings for the INA238.
+     * @return true if the ADC configuration is set successfully, false otherwise.
+     */
     bool setADCConfigRegister(ADCConfigRegister adcConfig);
-    bool setShuntCalibration(uint16_t calibrationValue);
+    /**
+     * @brief Sets the diagnostic alert register of the INA238.
+     * This method configures the diagnostic alert settings of the INA238.
+     * @param diagAlert Diagnostic alert settings for the INA238.
+     * @return true if the diagnostic alert register is set successfully, false otherwise.
+     */
     bool setDiagnosticAlertRegister(DiagnosticAlertRegister diagAlert);
+    /**
+     * @brief Sets the shunt overvoltage threshold.
+     * This method sets the threshold for shunt overvoltage detection.
+     * @param threshold Shunt overvoltage threshold in volts.
+     * @return true if the threshold is set successfully, false otherwise.
+     */
     bool setShuntOvervoltageThreshold(float threshold);
+    /**
+     * @brief Sets the shunt undervoltage threshold.
+     * This method sets the threshold for shunt undervoltage detection.
+     * @param threshold Shunt undervoltage threshold in volts.
+     * @return true if the threshold is set successfully, false otherwise.
+     */
     bool setShuntUndervoltageThreshold(float threshold);
+    /**
+     * @brief Sets the bus overvoltage threshold.
+     * This method sets the threshold for bus overvoltage detection.
+     * @param threshold Bus overvoltage threshold in volts.
+     * @return true if the threshold is set successfully, false otherwise.
+     */
     bool setBusOvervoltageThreshold(float threshold);
+    /**
+     * @brief Sets the bus undervoltage threshold.
+     * This method sets the threshold for bus undervoltage detection.
+     * @param threshold Bus undervoltage threshold in volts.
+     * @return true if the threshold is set successfully, false otherwise.
+     */
     bool setBusUndervoltageThreshold(float threshold);
+    /**
+     * @brief Sets the temperature overlimit threshold.
+     * This method sets the threshold for temperature overlimit detection.
+     * @param temperature Temperature overlimit threshold in degrees Celsius.
+     * @return true if the threshold is set successfully, false otherwise.
+     */
     bool setTemperatureOverlimitThreshold(float temperature);
+    /**
+     * @brief Sets the power overlimit threshold.
+     * This method sets the threshold for power overlimit detection.
+     * @param power Power overlimit threshold in watts.
+     * @return true if the threshold is set successfully, false otherwise.
+     */
     bool setPowerOverLimitThreshold(float power);
 
+    /**
+     * @brief Sets the shunt values for the INA238.
+     * This method sets the shunt resistance and maximum expected current for the INA238.
+     * The shunt calibration value is calculated based on the provided parameters.
+     * @param shuntResistance Shunt resistance in ohms.
+     * @param maxExpectedCurrent Maximum expected current in amperes.
+     * @return true if the shunt values are set successfully, false otherwise.
+     */
     bool setShuntValues(float shuntResistance, float maxExpectedCurrent);
 
+    /**
+     * @brief Reads the configuration register of the INA238.
+     * This method reads the current configuration settings from the INA238.
+     * @param config Reference to a ConfigRegister structure to store the read configuration.
+     * @return true if the configuration is read successfully, false otherwise.
+     */
     bool readConfigRegister(ConfigRegister &config);
+    /**
+     * @brief Reads the ADC configuration register of the INA238.
+     * This method reads the current ADC configuration settings from the INA238.
+     * @param adcConfig Reference to an ADCConfigRegister structure to store the read ADC configuration.
+     * @return true if the ADC configuration is read successfully, false otherwise.
+     */
     bool readADCConfigRegister(ADCConfigRegister &adcConfig);
+    /**
+     * @brief Reads the shunt calibration value from the INA238.
+     * This method reads the shunt calibration value, which is used to calculate current.
+     * @param calibrationValue Reference to a 16-bit unsigned integer to store the read calibration value.
+     * @return true if the calibration value is read successfully, false otherwise.
+     */
     bool readShuntCalibration(uint16_t &calibrationValue);
+    /**
+     * @brief Reads the diagnostic alert register of the INA238.
+     * This method reads the diagnostic alert settings from the INA238.
+     * @param diagAlert Reference to a DiagnosticAlertRegister structure to store the read diagnostic alert settings.
+     * @return true if the diagnostic alert register is read successfully, false otherwise.
+     */
     bool readDiagnosticAlertRegister(DiagnosticAlertRegister &diagAlert);
+    /**
+     * @brief Reads the shunt overvoltage threshold.
+     * This method reads the shunt overvoltage threshold value.
+     * @param threshold Reference to a float to store the read shunt overvoltage threshold in volts.
+     * @return true if the threshold is read successfully, false otherwise.
+     */
     bool readShuntOvervoltageThreshold(float &threshold);
+    /**
+     * @brief Reads the shunt undervoltage threshold.
+     * This method reads the shunt undervoltage threshold value.
+     * @param threshold Reference to a float to store the read shunt undervoltage threshold in volts.
+     * @return true if the threshold is read successfully, false otherwise.
+     */
     bool readShuntUndervoltageThreshold(float &threshold);
+    /**
+     * @brief Reads the bus overvoltage threshold.
+     * This method reads the bus overvoltage threshold value.
+     * @param threshold Reference to a float to store the read bus overvoltage threshold in volts.
+     * @return true if the threshold is read successfully, false otherwise.
+     */
     bool readBusOvervoltageThreshold(float &threshold);
+    /**
+     * @brief Reads the bus undervoltage threshold.
+     * This method reads the bus undervoltage threshold value.
+     * @param threshold Reference to a float to store the read bus undervoltage threshold in volts.
+     * @return true if the threshold is read successfully, false otherwise.
+     */
     bool readBusUndervoltageThreshold(float &threshold);
+    /**
+     * @brief Reads the temperature overlimit threshold.
+     * This method reads the temperature overlimit threshold value.
+     * @param temperature Reference to a float to store the read temperature overlimit threshold in degrees Celsius.
+     * @return true if the threshold is read successfully, false otherwise.
+     */
     bool readTemperatureOverlimitThreshold(float &temperature);
+    /**
+     * @brief Reads the power overlimit threshold.
+     * This method reads the power overlimit threshold value.
+     * @param power Reference to a float to store the read power overlimit threshold in watts.
+     * @return true if the threshold is read successfully, false otherwise.
+     */
     bool readPowerOverLimitThreshold(float &power);
 
+    /**
+     * @brief Reads the bus voltage from the INA238.
+     * This method reads the bus voltage value from the INA238.
+     * @param voltage Reference to a float to store the read bus voltage in volts.
+     * @return true if the bus voltage is read successfully, false otherwise.
+     */
     bool readBusVoltage(float &voltage);
+    /**
+     * @brief Reads the shunt voltage from the INA238.
+     * This method reads the shunt voltage value from the INA238.
+     * @param voltage Reference to a float to store the read shunt voltage in volts.
+     * @return true if the shunt voltage is read successfully, false otherwise.
+     */
     bool readShuntVoltage(float &voltage);
+    /**
+     * @brief Reads the current from the INA238.
+     * This method reads the current value from the INA238.
+     * The current is calculated based on the shunt voltage and resistance.
+     * @param current Reference to a float to store the read current in amperes.
+     * @return true if the current is read successfully, false otherwise.
+     */
     bool readCurrent(float &current);
+    /**
+     * @brief Reads the power from the INA238.
+     * This method reads the power value from the INA238.
+     * The power is calculated based on the bus voltage and current.
+     * @param power Reference to a float to store the read power in watts.
+     * @return true if the power is read successfully, false otherwise.
+     */
     bool readPower(float &power);
+    /**
+     * @brief Reads the temperature from the INA238.
+     * This method reads the temperature value from the INA238.
+     * The temperature is read in degrees Celsius.
+     * @param temperature Reference to a float to store the read temperature in degrees Celsius.
+     * @return true if the temperature is read successfully, false otherwise.
+     */
     bool readTemperature(float &temperature);
-
-    bool readDiagnosticAlert(uint16_t &alert);
-
     
+// Private members for INA238 class
+private:
+    // Private methods for internal operations
+    /**
+     * @brief Sets the shunt calibration value.
+     * This method sets the shunt calibration value for the INA238.
+     * @param calibrationValue Shunt calibration value (16-bit unsigned integer).
+     * @return true if the calibration value is set successfully, false otherwise.
+     */
+    bool setShuntCalibration(uint16_t calibrationValue);
 
+    bool writeRegister(uint8_t reg, const uint8_t *data, size_t length);
+    bool readRegister(uint8_t reg, uint8_t *data, size_t length);
+    bool read16BitRegister(uint8_t reg, uint16_t &value);
+    bool write16BitRegister(uint8_t reg, uint16_t value);
 
+    // Private member variables
+    uint8_t _address; // I2C address of the INA238
+    TwoWire *_wire = nullptr;   // Pointer to the I2C wire object
+
+    float _shuntResistance; // Shunt resistance value in ohms
+    float _maxExpectedCurrent; // Maximum expected current in amperes
+    ADCRange _adcRange; // ADC range setting
+    
 };
 #endif // INA238_H
