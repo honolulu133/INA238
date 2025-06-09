@@ -179,7 +179,7 @@ public:
      * @brief Destructor for INA238 class.
      * Cleans up resources used by the INA238 instance.
      */
-    ~INA238();
+    ~INA238() = default;
 
     /**
      * @brief Initializes the INA238 with the specified I2C wire port.
@@ -383,25 +383,19 @@ public:
 // Private members for INA238 class
 private:
     // Private methods for internal operations
-    /**
-     * @brief Sets the shunt calibration value.
-     * This method sets the shunt calibration value for the INA238.
-     * @param calibrationValue Shunt calibration value (16-bit unsigned integer).
-     * @return true if the calibration value is set successfully, false otherwise.
-     */
-    bool setShuntCalibration(uint16_t calibrationValue);
-
-    bool writeRegister(uint8_t reg, const uint8_t *data, size_t length);
-    bool readRegister(uint8_t reg, uint8_t *data, size_t length);
-    bool read16BitRegister(uint8_t reg, uint16_t &value);
-    bool write16BitRegister(uint8_t reg, uint16_t value);
+    bool read16BitSignedRegister(uint8_t reg, int16_t &value);
+    bool write16BitSignedRegister(uint8_t reg, int16_t value);
+    bool read16BitUnsignedRegister(uint8_t reg, uint16_t &value);
+    bool write16BitUnsignedRegister(uint8_t reg, uint16_t value);
+    bool read24BitUnsignedRegister(uint8_t reg, uint32_t &value);
 
     // Private member variables
     uint8_t _address; // I2C address of the INA238
-    TwoWire *_wire = nullptr;   // Pointer to the I2C wire object
+    TwoWire *_wire;   // Pointer to the I2C wire object
 
     float _shuntResistance; // Shunt resistance value in ohms
     float _maxExpectedCurrent; // Maximum expected current in amperes
+    float _lsbCurrent; // LSB current value in amperes
     ADCRange _adcRange; // ADC range setting
     
 };
