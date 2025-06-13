@@ -220,6 +220,13 @@ public:
     /**
      * @brief Sets the shunt overvoltage threshold.
      * This method sets the threshold for shunt overvoltage detection.
+     * Resolution:
+     * ADCRANGE = 0 (163.84 mV) -> 5 uV/LSB
+     * ADCRANGE = 1 (40.96 mV) -> 1.25 uV/LSB
+     * Default value is 0x7FFF (maximum threshold).
+     * If negative values are entered in this register, then a shunt voltage measurement of 0 V trips this alarm. When
+     * using negative values for the shunt under and overvoltage thresholds be aware that the over voltage threshold
+     * must be set to the larger (that is, less negative) of the two values.
      * @param threshold Shunt overvoltage threshold in volts.
      * @return true if the threshold is set successfully, false otherwise.
      */
@@ -227,6 +234,10 @@ public:
     /**
      * @brief Sets the shunt undervoltage threshold.
      * This method sets the threshold for shunt undervoltage detection.
+     * Resolution:
+     * ADCRANGE = 0 (163.84 mV) -> 5 uV/LSB
+     * ADCRANGE = 1 (40.96 mV) -> 1.25 uV/LSB
+     * Default value is 0x8000 (minimum threshold).
      * @param threshold Shunt undervoltage threshold in volts.
      * @return true if the threshold is set successfully, false otherwise.
      */
@@ -234,6 +245,8 @@ public:
     /**
      * @brief Sets the bus overvoltage threshold.
      * This method sets the threshold for bus overvoltage detection.
+     * Resolution: 3.125 mV/LSB
+     * Default value is 0x7FFF (maximum threshold, positive values only).
      * @param threshold Bus overvoltage threshold in volts.
      * @return true if the threshold is set successfully, false otherwise.
      */
@@ -241,6 +254,8 @@ public:
     /**
      * @brief Sets the bus undervoltage threshold.
      * This method sets the threshold for bus undervoltage detection.
+     * Resolution: 3.125 mV/LSB
+     * Default value is 0x0000 (minimum threshold, positive values only).
      * @param threshold Bus undervoltage threshold in volts.
      * @return true if the threshold is set successfully, false otherwise.
      */
@@ -248,6 +263,8 @@ public:
     /**
      * @brief Sets the temperature overlimit threshold.
      * This method sets the threshold for temperature overlimit detection.
+     * Resolution: 0.125 °C/LSB
+     * Default value is 0x7FF (maximum threshold).
      * @param temperature Temperature overlimit threshold in degrees Celsius.
      * @return true if the threshold is set successfully, false otherwise.
      */
@@ -255,6 +272,9 @@ public:
     /**
      * @brief Sets the power overlimit threshold.
      * This method sets the threshold for power overlimit detection.
+     * Resolution: 256 × Power LSB
+     * (Power LSB = Current LSB * 0.2)
+     * Default value is 0xFFFF (maximum threshold, positive values only).
      * @param power Power overlimit threshold in watts.
      * @return true if the threshold is set successfully, false otherwise.
      */
@@ -396,6 +416,7 @@ private:
     float _shuntResistance; // Shunt resistance value in ohms
     float _maxExpectedCurrent; // Maximum expected current in amperes
     float _lsbCurrent; // LSB current value in amperes
+    float _lsbPower; // LSB power value in watts
     ADCRange _adcRange; // ADC range setting
     
 };

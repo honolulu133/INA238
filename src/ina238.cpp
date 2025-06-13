@@ -70,13 +70,91 @@ bool INA238::setDiagnosticAlertRegister(DiagnosticAlertRegister diagAlert)
     return write16BitRegister(INA238_REG_DIAG_ALERT, reinterpret_cast<const uint16_t &>(diagAlert));
 }
 
-bool INA238::setShuntOvervoltageThreshold(float threshold);
-bool INA238::setShuntUndervoltageThreshold(float threshold);
-bool INA238::setBusOvervoltageThreshold(float threshold);
-bool INA238::setBusUndervoltageThreshold(float threshold);
-bool INA238::setTemperatureOverlimitThreshold(float temperature);
-bool INA238::setPowerOverLimitThreshold(float power);
+bool INA238::setShuntOvervoltageThreshold(float threshold)
+{
+    // Clamp the threshold to the maximum and minimum value based on the ADC range
+    if (_adcRange == ADCRange::RANGE_163_84_MV) {
+        threshold = std::max(-0.16384f, std::min(threshold, 0.16384f));
+    } else {
+        threshold = std::max(-0.04096f, std::min(threshold, 0.04096f));
+    }
 
+    // Select the appropriate scale factor based on the ADC range
+    float scaleFactor = (_adcRange == ADCRange::RANGE_163_84_MV) ? 5.0e-6f : 1.25e-6f; // 5 uV/LSB or 1.25 uV/LSB
+
+    // Calculate the raw threshold value based on the scale factor
+    int16_t rawThreshold = static_cast<int16_t>(threshold / scaleFactor);
+
+    // Set the raw threshold value to the SHUNT_OVERVOLTAGE register
+    return write16BitSignedRegister(INA238_REG_SHUNT_OVERVOLTAGE, rawThreshold);
+}
+
+bool INA238::setShuntUndervoltageThreshold(float threshold)
+{
+    // Clamp the threshold to the maximum and minimum value based on the ADC range
+    if (_adcRange == ADCRange::RANGE_163_84_MV) {
+        threshold = std::max(-0.16384f, std::min(threshold, 0.16384f));
+    } else {
+        threshold = std::max(-0.04096f, std::min(threshold, 0.04096f));
+    }
+
+    // Select the appropriate scale factor based on the ADC range
+    float scaleFactor = (_adcRange == ADCRange::RANGE_163_84_MV) ? 5.0e-6f : 1.25e-6f; // 5 uV/LSB or 1.25 uV/LSB
+
+    // Calculate the raw threshold value based on the scale factor
+    int16_t rawThreshold = static_cast<int16_t>(threshold / scaleFactor);
+
+    // Set the raw threshold value to the SHUNT_UNDERVOLTAGE register
+    return write16BitSignedRegister(INA238_REG_SHUNT_UNDERVOLTAGE, rawThreshold);
+}
+
+bool INA238::setBusOvervoltageThreshold(float threshold)
+{
+    // Clamp the threshold to the maximum value (Vbus max = 85V)
+    threshold = std::max(0.0f, std::min(threshold, 85.0f)); // Maximum bus voltage for INA238
+
+    // Calculate the raw threshold value based on the scale factor
+    int16_t rawThreshold = static_cast<int16_t>(threshold / 0.003125f);
+
+    // Set the raw threshold value to the BUS_OVERVOLTAGE register
+    return write16BitSignedRegister(INA238_REG_BUS_OVERVOLTAGE, rawThreshold);
+}
+
+bool INA238::setBusUndervoltageThreshold(float threshold)
+{
+    // Clamp the threshold to the minimum and maximum value
+    threshold = std::max(0.0f, std::min(threshold, 32767.0f * 0.003125f)); // 3.125 mV/LSB
+
+    // Calculate the raw threshold value based on the scale factor
+    int16_t rawThreshold = static_cast<int16_t>(threshold / 0.003125f);
+
+    // Set the raw threshold value to the BUS_UNDERVOLTAGE register
+    return write16BitSignedRegister(INA238_REG_BUS_UNDERVOLTAGE, rawThreshold);
+}
+
+bool INA238::setTemperatureOverlimitThreshold(float temperature)
+{
+    // Clamp the temperature to the maximum (recommended) values
+    temperature = std::max(-40.0f, std::min(temperature, 125.0f)); // Temperature range for INA238
+
+    // Calculate the raw threshold value based on the scale factor
+    int16_t rawThreshold = static_cast<int16_t>(temperature / 0.125f); // 0.125 °C/LSB
+
+    // Set the raw threshold value to the TEMPERATURE_OVERLIMIT register
+    return write16BitSignedRegister(INA238_REG_TEMPERATURE_OVERLIMIT, rawThreshold);
+}
+
+bool INA238::setPowerOverLimitThreshold(float power)
+{
+    // Clamp the power to the maximum value based on the current LSB
+    power = std::max(0.0f, std::min(power, 32767.0f * _lsbPower * 256.0f)); // Power LSB = Current LSB * 0.2
+
+    // Calculate the raw threshold value based on the scale factor
+    uint16_t rawThreshold = static_cast<uint16_t>(power / _lsbPower / 256.0f); // 256 * Power LSB
+
+    // Set the raw threshold value to the POWER_OVERLIMIT register
+    return write16BitUnsignedRegister(INA238_REG_POWER_OVERLIMIT, rawThreshold);
+}
 
 bool INA238::setShuntValues(float shuntResistance, float maxExpectedCurrent)
 {
@@ -89,6 +167,9 @@ bool INA238::setShuntValues(float shuntResistance, float maxExpectedCurrent)
     
     // Calculate the current LSB value based on the maximum expected current
     _lsbCurrent = Imax / 32768.0;
+
+    // Calculate the power LSB value based on the current LSB
+    _lsbPower = _lsbCurrent * 0.2;
 
     // Calculate the shunt calibration value
     float rawCal = SCALE_FACTOR * Rshunt * currentLsb;
