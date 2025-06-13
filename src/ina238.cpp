@@ -140,6 +140,9 @@ bool INA238::setTemperatureOverlimitThreshold(float temperature)
     // Calculate the raw threshold value based on the scale factor
     int16_t rawThreshold = static_cast<int16_t>(temperature / 0.125f); // 0.125 °C/LSB
 
+    // Only bits 15-4 are valid for temperature, so we need to multiply by 16 to get the correct value and preserve the sign
+    rawThreshold *= 16;
+
     // Set the raw threshold value to the TEMPERATURE_OVERLIMIT register
     return write16BitSignedRegister(INA238_REG_TEMPERATURE_OVERLIMIT, rawThreshold);
 }
@@ -286,6 +289,9 @@ bool INA238::readTemperatureOverlimitThreshold(float &temperature)
         return false; // Failed to read the register
     }
 
+    // Only bits 15-4 are valid for temperature, so we need to divide by 16 to get the correct value and preserve the sign
+    rawThreshold /= 16;
+
     // Convert the raw threshold to degrees Celsius (0.125 °C/LSB)
     temperature = rawThreshold * 0.125f; // 0.125 °C/LSB
     return true; // Successfully read the temperature overlimit threshold
@@ -303,3 +309,77 @@ bool INA238::readPowerOverLimitThreshold(float &power)
     power = rawThreshold * _lsbPower * 256.0f; // Power LSB = Current LSB * 0.2
     return true; // Successfully read the power overlimit threshold
 }
+
+bool INA238::readBusVoltage(float &voltage)
+{
+    // Read the BUS_VOLTAGE register and convert the raw value to volts
+    uint16_t rawValue;
+    if (!read16BitUnsignedRegister(INA238_REG_BUS_VOLTAGE, rawValue)) {
+        return false; // Failed to read the register
+    }
+
+    // Convert the raw value to volts (3.125 mV/LSB)
+    voltage = rawValue * 0.003125f; // 3.125 mV/LSB
+    return true; // Successfully read the bus voltage
+}
+
+bool INA238::readShuntVoltage(float &voltage)
+{
+    // Read the SHUNT_VOLTAGE register and convert the raw value to volts
+    int16_t rawValue;
+    if (!read16BitSignedRegister(INA238_REG_SHUNT_VOLTAGE, rawValue)) {
+        return false; // Failed to read the register
+    }
+
+    // Select the appropriate scale factor based on the ADC range
+    float scaleFactor = (_adcRange == ADCRange::RANGE_163_84_MV) ? 5.0e-6f : 1.25e-6f; // 5 uV/LSB or 1.25 uV/LSB
+
+    // Convert the raw value to volts
+    voltage = rawValue * scaleFactor;
+    return true; // Successfully read the shunt voltage
+}
+
+bool INA238::readCurrent(float &current)
+{
+    // Read the CURRENT register and calculate the current based on the shunt voltage and resistance
+    int16_t rawCurrent;
+    if (!read16BitSignedRegister(INA238_REG_CURRENT, rawCurrent)) {
+        return false; // Failed to read the register
+    }
+    
+    // Calculate the current in amperes based on the raw value and the LSB current
+    current = rawCurrent * _lsbCurrent; // LSB current = Imax / 32768.0
+    return true; // Successfully read the current
+}
+
+bool INA238::readPower(float &power)
+{
+    // Read the POWER register and calculate the power based on the bus voltage and current
+    uint16_t rawPower;
+    if (!read16BitUnsignedRegister(INA238_REG_POWER, rawPower)) {
+        return false; // Failed to read the register
+    }
+
+    // Calculate the power in watts based on the raw value and the LSB power
+    power = rawPower * _lsbPower; // Power LSB = Current LSB * 0.2
+    return true; // Successfully read the power
+}
+
+bool INA238::readTemperature(float &temperature)
+{
+    // Read the TEMPERATURE register and convert the raw value to degrees Celsius
+    int16_t rawTemperature;
+    if (!read16BitSignedRegister(INA238_REG_TEMPERATURE, rawTemperature)) {
+        return false; // Failed to read the register
+    }
+
+    // Only bits 15-4 are valid for temperature, so we need to divide by 16 to get the correct value and preserve the sign
+    rawTemperature /= 16;
+
+    // Convert the raw value to degrees Celsius (0.125 °C/LSB)
+    temperature = rawTemperature * 0.125f; // 0.125 °C/LSB
+    return true; // Successfully read the temperature
+}
+
+
+// Private helper methods for reading and writing registers
