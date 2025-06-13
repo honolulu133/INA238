@@ -181,4 +181,125 @@ bool INA238::setShuntValues(float shuntResistance, float maxExpectedCurrent)
     return write16BitRegister(INA238_REG_SHUNT_CAL, shuntCal);
 }
 
+bool INA238::readConfigRegister(ConfigRegister &config)
+{
+    // Read the CONFIG register and store the result in the provided ConfigRegister structure
+    uint16_t rawValue;
+    if (!read16BitUnsignedRegister(INA238_REG_CONFIG, rawValue)) {
+        return false; // Failed to read the register
+    }
+    config = *reinterpret_cast<ConfigRegister *>(&rawValue);
+    return true; // Successfully read the configuration register
+}
 
+bool INA238::readADCConfigRegister(ADCConfigRegister &adcConfig)
+{
+    // Read the ADC_CONFIG register and store the result in the provided ADCConfigRegister structure
+    uint16_t rawValue;
+    if (!read16BitUnsignedRegister(INA238_REG_ADC_CONFIG, rawValue)) {
+        return false; // Failed to read the register
+    }
+    adcConfig = *reinterpret_cast<ADCConfigRegister *>(&rawValue);
+    return true; // Successfully read the ADC configuration register
+}
+
+bool INA238::readShuntCalibration(uint16_t &calibrationValue)
+{
+    // Read the SHUNT_CAL register and store the result in the provided calibration value
+    return read16BitUnsignedRegister(INA238_REG_SHUNT_CAL, calibrationValue);
+}
+
+bool INA238::readDiagnosticAlertRegister(DiagnosticAlertRegister &diagAlert)
+{
+    // Read the DIAG_ALERT register and store the result in the provided DiagnosticAlertRegister structure
+    uint16_t rawValue;
+    if (!read16BitUnsignedRegister(INA238_REG_DIAG_ALERT, rawValue)) {
+        return false; // Failed to read the register
+    }
+    diagAlert = *reinterpret_cast<DiagnosticAlertRegister *>(&rawValue);
+    return true; // Successfully read the diagnostic alert register
+}
+
+bool INA238::readShuntOvervoltageThreshold(float &threshold)
+{
+    // Read the SHUNT_OVERVOLTAGE register and convert the raw value to volts
+    int16_t rawThreshold;
+    if (!read16BitSignedRegister(INA238_REG_SHUNT_OVERVOLTAGE, rawThreshold)) {
+        return false; // Failed to read the register
+    }
+
+    // Select the appropriate scale factor based on the ADC range
+    float scaleFactor = (_adcRange == ADCRange::RANGE_163_84_MV) ? 5.0e-6f : 1.25e-6f; // 5 uV/LSB or 1.25 uV/LSB
+
+    // Convert the raw threshold to volts
+    threshold = rawThreshold * scaleFactor;
+    return true; // Successfully read the shunt overvoltage threshold
+}
+
+bool INA238::readShuntUndervoltageThreshold(float &threshold)
+{
+    // Read the SHUNT_UNDERVOLTAGE register and convert the raw value to volts
+    int16_t rawThreshold;
+    if (!read16BitSignedRegister(INA238_REG_SHUNT_UNDERVOLTAGE, rawThreshold)) {
+        return false; // Failed to read the register
+    }
+
+    // Select the appropriate scale factor based on the ADC range
+    float scaleFactor = (_adcRange == ADCRange::RANGE_163_84_MV) ? 5.0e-6f : 1.25e-6f; // 5 uV/LSB or 1.25 uV/LSB
+
+    // Convert the raw threshold to volts
+    threshold = rawThreshold * scaleFactor;
+    return true; // Successfully read the shunt undervoltage threshold
+}
+
+bool INA238::readBusOvervoltageThreshold(float &threshold)
+{
+    // Read the BUS_OVERVOLTAGE register and convert the raw value to volts
+    int16_t rawThreshold;
+    if (!read16BitSignedRegister(INA238_REG_BUS_OVERVOLTAGE, rawThreshold)) {
+        return false; // Failed to read the register
+    }
+
+    // Convert the raw threshold to volts (3.125 mV/LSB)
+    threshold = rawThreshold * 0.003125f; // 3.125 mV/LSB
+    return true; // Successfully read the bus overvoltage threshold
+}
+
+bool INA238::readBusUndervoltageThreshold(float &threshold)
+{
+    // Read the BUS_UNDERVOLTAGE register and convert the raw value to volts
+    int16_t rawThreshold;
+    if (!read16BitSignedRegister(INA238_REG_BUS_UNDERVOLTAGE, rawThreshold)) {
+        return false; // Failed to read the register
+    }
+
+    // Convert the raw threshold to volts (3.125 mV/LSB)
+    threshold = rawThreshold * 0.003125f; // 3.125 mV/LSB
+    return true; // Successfully read the bus undervoltage threshold
+}
+
+bool INA238::readTemperatureOverlimitThreshold(float &temperature)
+{
+    // Read the TEMPERATURE_OVERLIMIT register and convert the raw value to degrees Celsius
+    int16_t rawThreshold;
+    if (!read16BitSignedRegister(INA238_REG_TEMPERATURE_OVERLIMIT, rawThreshold)) {
+        return false; // Failed to read the register
+    }
+
+    // Convert the raw threshold to degrees Celsius (0.125 °C/LSB)
+    temperature = rawThreshold * 0.125f; // 0.125 °C/LSB
+    return true; // Successfully read the temperature overlimit threshold
+}
+
+bool INA238::readPowerOverLimitThreshold(float &power)
+{
+    // Read the POWER_OVERLIMIT register and convert the raw value to watts
+    uint16_t rawThreshold;
+    if (!read16BitUnsignedRegister(INA238_REG_POWER_OVERLIMIT, rawThreshold)) {
+        return false; // Failed to read the register
+    }
+
+    // Convert the raw threshold to watts (256 * Power LSB)
+    power = rawThreshold * _lsbPower * 256.0f; // Power LSB = Current LSB * 0.2
+    return true; // Successfully read the power overlimit threshold
+}
